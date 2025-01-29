@@ -1,0 +1,46 @@
+# replicate.yaml
+name: hoi-lau/svgdreamer
+description: Text Guided SVG Generation with Diffusion Model
+author: hoi-lau
+tags:
+  - svg-generation
+  - diffusion-model
+
+# 定义模型的输入参数
+inputs:
+  - name: prompt
+    description: The text prompt for SVG generation
+    type: string
+    default: "an astronaut walking across a desert, planet mars in the background, floating beside planets, space art"
+  - name: skip_sive
+    description: Whether to skip the SIVE stage
+    type: boolean
+    default: false
+  - name: token_ind
+    description: Token index
+    type: integer
+    default: 5
+  - name: result_path
+    description: Path to save the results
+    type: string
+    default: "./logs/astronaut_sive"
+  - name: seed
+    description: Random seed
+    type: integer
+    default: 116740
+
+# 定义模型的输出
+outputs:
+  - name: svg_files
+    description: Generated SVG files
+    type: file[]
+
+# 定义运行环境
+environment:
+  python_version: 3.10
+  setup:
+    - pip install -r requirements.txt
+
+# 定义运行命令
+run:
+  command: python svgdreamer.py x=iconography-s1 skip_sive={{skip_sive}} "prompt={{prompt}}" token_ind={{token_ind}} result_path={{result_path}} seed={{seed}}
