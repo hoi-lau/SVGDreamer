@@ -1,0 +1,97 @@
+build:
+  gpu: true
+  cuda: "11.3"
+  python_version: "3.10"
+  system_packages:
+    - "libgl1-mesa-glx"
+    - "libglib2.0-0"
+    - "ubuntu-keyring"
+    - "git"
+  python_packages:
+    - "cog==0.1.0"
+    - "torch==1.12.1"
+    - "torchvision==0.13.1"
+    - "torchaudio==0.12.1"
+    - "hydra-core"
+    - "omegaconf"
+    - "freetype-py"
+    - "shapely"
+    - "svgutils"
+    - "opencv-python"
+    - "scikit-image"
+    - "matplotlib"
+    - "visdom"
+    - "wandb"
+    - "beautifulsoup4"
+    - "triton"
+    - "numba"
+    - "numpy"
+    - "scipy"
+    - "scikit-fmm"
+    - "einops"
+    - "timm"
+    - "fairscale==0.4.13"
+    - "accelerate"
+    - "transformers"
+    - "safetensors"
+    - "datasets"
+    - "easydict"
+    - "scikit-learn"
+    - "pytorch_lightning==2.1.0"
+    - "webdataset"
+    - "ftfy"
+    - "regex"
+    - "tqdm"
+    - "git+https://github.com/openai/CLIP.git"
+    - "diffusers==0.20.2"
+    - "xformers"
+    - "svgwrite"
+    - "svgpathtools"
+    - "cssutils"
+    - "torch-tools"
+  run:
+    # Stage 1: Base system stabilization
+    - apt-get update -y
+    - dpkg --configure -a
+    - apt-get -f install -y
+    - rm -rf /var/lib/apt/lists/*
+
+    # Stage 2: Safe certificate installation
+    - apt-get update -y
+    - DEBIAN_FRONTEND=noninteractive apt-get install --reinstall --no-install-recommends -y \
+        ca-certificates \
+        openssl \
+        && apt-get clean \
+        && update-ca-certificates --fresh \
+        || (rm -rf /var/lib/apt/lists/* && exit 1)
+
+    # Stage 3: Remaining packages
+    - apt-get update -y
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        software-properties-common \
+        build-essential \
+        libssl-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
+
+    # Stage 4: NVIDIA repository setup
+    - mkdir -p /etc/apt/keyrings
+    - curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub > /tmp/cuda.pub
+    - gpg --dearmor --output /etc/apt/keyrings/cuda.gpg < /tmp/cuda.pub
+    - echo "deb [signed-by=/etc/apt/keyrings/cuda.gpg arch=amd64] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64 /" > /etc/apt/sources.list.d/cuda.list
+
+    # Final system check
+    - apt-get update -y
+    - apt-get -f install -y
+    - dpkg --configure -a
+
+    # Install diffvg
+    - git clone https://github.com/BachiLi/diffvg.git
+    - cd diffvg && git submodule update --init --recursive
+    - pip install -e ./diffvg
+
+predict: "predict.py:Predictor"
